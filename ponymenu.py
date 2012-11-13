@@ -67,17 +67,6 @@ class Ponymenu:
             Popen(['stty', '-icanon', '-echo', '-isig', '-ixoff', '-ixon', '-ixany'], stdin=sys.stdout).wait()
             
             
-            termsize = (24, 80)
-            for channel in (sys.stderr, sys.stdout, sys.stdin):
-                termsize = Popen(['stty', 'size'], stdin=channel, stdout=PIPE, stderr=PIPE).communicate()[0]
-                if len(termsize) > 0:
-                    termsize = termsize.decode('utf8', 'replace')[:-1].split(' ') # [:-1] removes a \n
-                    termsize = [int(item) for item in termsize]
-                    break
-            
-            (self.termh, self.termw) = termsize
-            
-            
             self.HOME = os.environ['HOME'] if 'HOME' in os.environ else ''
             if len(self.HOME) == 0:
                 os.environ['HOME'] = self.HOME = os.path.expanduser('~')
@@ -212,9 +201,6 @@ class Ponymenu:
     
     
     def interact(self):
-        fill = ' ' * self.termw
-        printf('\033[m\033[1;1H\033[2J\033[7;1m%s\033[27;21m\033[%i;1H\033[7m%s\033[27m\n%s\033[5;1H', ' ponymenu, press C-q to quit' + fill[28:], self.termh - 1, fill, '\033[7;41;1m<\033[m' + fill[1:])
-        
         def clean(items):
             i = 0
             while i < len(items):
@@ -248,8 +234,26 @@ class Ponymenu:
                 selected = entry is items[selectedIndex]
                 printEntry(entry, selected, maxlen)
         
-        printAll(items, selectedIndex, maxlen)
+        def redraw(items, selectedIndex, maxlen):
+            termsize = (24, 80)
+            for channel in (sys.stderr, sys.stdout, sys.stdin):
+                termsize = Popen(['stty', 'size'], stdin=channel, stdout=PIPE, stderr=PIPE).communicate()[0]
+                if len(termsize) > 0:
+                    termsize = termsize.decode('utf8', 'replace')[:-1].split(' ') # [:-1] removes a \n
+                    termsize = [int(item) for item in termsize]
+                    break
+            
+            (self.termh, self.termw) = termsize
+            
+            global fill
+            fill = ' ' * self.termw
+            printf('\033[m\033[1;1H\033[2J\033[7;1m%s\033[27;21m\033[%i;1H\033[7m%s\033[27m\n%s\033[5;1H', ' ponymenu, press C-q to quit' + fill[28:], self.termh - 1, fill, '\033[7;41;1m<\033[m' + fill[1:])
+            
+            printAll(items, selectedIndex, maxlen)
         
+        redraw(items, selectedIndex, maxlen)
+        
+        global fill
         while True:
             flush()
             c = sys.stdin.read(1)
@@ -266,7 +270,9 @@ class Ponymenu:
             if c == '\033[D':
                 c = chr(8)
             
-            if c.startswith('\033['):
+            if c == chr(ord('L') - ord('@')):
+                redraw(items, selectedIndex, maxlen)
+            elif c.startswith('\033['):
                 if c == '\033[A':
                     printf('\033[%i;1H', selectedIndex + 5)
                     printEntry(items[selectedIndex], False, maxlen)
