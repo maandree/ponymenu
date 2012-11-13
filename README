@@ -1,1 +1,18 @@
 ponymenu is quick terminal based application menu
+
+Why is a application menu in the terminal needed?
+    If you have many program, such as games, that
+    of which you do not known the exact name,
+    using a menu is useful.
+    And becase it is runs it the terminal it is
+    also more comfortable to use the mouse eponiter
+    based menu, it is will still work in the TTY.
+
+
+This package is not complete, but is ready for use,
+unfortunely there is no documentation yet, so you
+will have the read parts of the code, to learn it.
+
+I suggest aliasing this program to `q`, or whatever
+character is under your left ring finger.
+
