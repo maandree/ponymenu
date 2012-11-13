@@ -126,7 +126,7 @@ class Ponymenu:
             
             
             menuFound = False
-            self.root = Entry(None, None, None, [])
+            self.root = Entry(None, None, None, None)
             
             for file in ('$XDG_CONFIG_HOME/ponymenu/ponymenu',
                          '$HOME/.config/ponymenu/ponymenu',
@@ -158,14 +158,35 @@ class Ponymenu:
     
     
     def loadMenu(self, code):
-        ## TODO implement actual
-        self.root.inner = [Entry('cookies', 'c', None, [Entry('fortune-mod', 'regular fortune cookies',  ['fortune'], None),
-                                                        Entry('pinkiepie', 'ponified fortune cookies', ['sh', 'pinkie'], None),
-                                                        Entry('sex', 'nasty fortune cookies', ['sex'], None)]),
-                           Entry('pony printers', 'p', None, [Entry('ponysay', 'Block based', ['ponysay', '--q'], None),
-                                                              Entry('cowsay', 'ASCII based', ['bash', '-c', 'pinkie | cowsay'], None)]),
-                           Entry('empty', None, None, []),
-                           Entry('void', None, None, None)]
+        def make(items):
+            rc = []
+            for item in items:
+                (name, desc, cmd, inner) = (None, None, None, None)
+                add = True
+                for tag in item:
+                    if   tag[0] == 'name':  name = ' '.join(tag[1:])
+                    elif tag[0] == 'desc':  desc = ' '.join(tag[1:])
+                    elif tag[0] == 'cmd':
+                        cmd  = tag[1:]
+                        if (len(cmd) == 1) and isinstance(cmd[0], list):
+                            cmd = cmd[0]
+                    elif tag[0] == 'inner':
+                        inner = make(tag[1:])
+                    elif tag[0] == 'req':
+                        for req in tag[0]:
+                            if not isinstance(req, list):
+                                req = [req]
+                            qual = True
+                            for r in req:
+                                if r == 'tty':
+                                    qual &= not self.graphical
+                                elif (r == 'x') or (r == 'graphical'):
+                                    qual &= self.graphical
+                            add |= qual
+                if add:
+                    rc.append(Entry(name, desc, cmd, inner))
+            return rc
+        self.root.inner = make(Parser.parse(code))
     
     
     @staticmethod
@@ -195,7 +216,7 @@ class Ponymenu:
         selectedIndex = 0
         count = len(items)
         
-        def printEntry(entry, selected):
+        def printEntry(entry, selected, maxlen):
             printf('    %s \033[%sm%s%s\033[21m%s%s\033[m\n', '\033[1;34m>\033[m' if selected else ' ',
                                                               ('1;37;44' if self.linuxvt else '97;44') if selected else '34',
                                                               entry.name, fill[UCS.dispLen(entry.name) : maxlen + 12],
@@ -205,12 +226,12 @@ class Ponymenu:
         def printSearch():
             printf('\033[%i;1H\033[K%s\033[7;41;1m<\033[m', self.termh, searchString)
         
-        def printAll(items, selectedIndex):
+        def printAll(items, selectedIndex, maxlen):
             for entry in items:
                 selected = entry is items[selectedIndex]
-                printEntry(entry, selected)
+                printEntry(entry, selected, maxlen)
         
-        printAll(items, selectedIndex)
+        printAll(items, selectedIndex, maxlen)
         
         while True:
             flush()
@@ -230,16 +251,16 @@ class Ponymenu:
             if c.startswith('\033['):
                 if c == '\033[A':
                     printf('\033[%i;1H', selectedIndex + 5)
-                    printEntry(items[selectedIndex], False)
+                    printEntry(items[selectedIndex], False, maxlen)
                     selectedIndex = (count if selectedIndex == 0 else selectedIndex) - 1
                     printf('\033[%i;1H', selectedIndex + 5)
-                    printEntry(items[selectedIndex], True)
+                    printEntry(items[selectedIndex], True, maxlen)
                 elif c == '\033[B':
                     printf('\033[%i;1H', selectedIndex + 5)
-                    printEntry(items[selectedIndex], False)
+                    printEntry(items[selectedIndex], False, maxlen)
                     selectedIndex = (selectedIndex + 1) % count
                     printf('\033[%i;1H', selectedIndex + 5)
-                    printEntry(items[selectedIndex], True)
+                    printEntry(items[selectedIndex], True, maxlen)
                 elif c == '\033[C':
                     at = len(searchString)
                     while True:
@@ -267,8 +288,9 @@ class Ponymenu:
                         count = len(items)
                         selectedIndex %= count
                         drop = '\033[5;1H' + (fill + '\n') * drop
+                        maxlen = UCS.dispLen(max([entry.name for entry in items], key = UCS.dispLen))
                         printf(drop + '\033[5;1H')
-                        printAll(items, selectedIndex)
+                        printAll(items, selectedIndex, maxlen)
                         printSearch()
             elif (c == '\n') or (c == '\t'):
                 if c == '\n':
@@ -294,8 +316,9 @@ class Ponymenu:
                 drop = count
                 count = len(items)
                 drop = '\033[5;1H' + (fill + '\n') * drop
+                maxlen = UCS.dispLen(max([entry.name for entry in items], key = UCS.dispLen))
                 printf(drop + '\033[5;1H')
-                printAll(items, selectedIndex)
+                printAll(items, selectedIndex, maxlen)
                 printSearch()
             elif (len(c) == 1) and ((ord(c) >= 32) or (c == chr(8)) or (c == chr(127))):
                 further = False
@@ -316,8 +339,9 @@ class Ponymenu:
                     count = len(items)
                     selectedIndex %= count
                     drop = '\033[5;1H' + (fill + '\n') * drop
+                    maxlen = UCS.dispLen(max([entry.name for entry in items], key = UCS.dispLen))
                     printf(drop + '\033[5;1H')
-                    printAll(items, selectedIndex)
+                    printAll(items, selectedIndex, maxlen)
                 printSearch()
         
         return None
@@ -325,8 +349,8 @@ class Ponymenu:
 
 class Entry:
     def __init__(self, name, desc, cmd, inner):
-        self.name = name
-        self.desc = '' if desc is None else desc
+        self.name = name if name is not None else '[untitled]'
+        self.desc = desc if desc is not None else ''
         self.cmd = cmd
         self.inner = inner
     
@@ -381,8 +405,86 @@ class UCS():
     @staticmethod
     def dispLen(string):
         return len(string) - UCS.countCombining(string)
-    
 
+
+'''
+Bracket tree parser
+'''
+class Parser:
+    '''
+    Parse a code and return a tree
+    
+    @param   code:str      The code to parse
+    @return  :list<↑|str>  The root node in the tree
+    '''
+    @staticmethod
+    def parse(code):
+        stack = []
+        stackptr = -1
+        
+        comment = False
+        escape = False
+        quote = None
+        buf = None
+        
+        for charindex in range(0, len(code)):
+            c = code[charindex]
+            if comment:
+                if c in '\n\r\f':
+                    comment = False
+            elif escape:
+                escape = False
+                if   c == 'a':  buf += '\a'
+                elif c == 'b':  buf += chr(8)
+                elif c == 'e':  buf += '\033'
+                elif c == 'f':  buf += '\f'
+                elif c == 'n':  buf += '\n'
+                elif c == 'r':  buf += '\r'
+                elif c == 't':  buf += '\t'
+                elif c == 'v':  buf += chr(11)
+                elif c == '0':  buf += '\0'
+                else:
+                    buf += c
+            elif c == quote:
+                quote = None
+            elif (c in ';#') and (quote is None):
+                if buf is not None:
+                    stack[stackptr].append(buf)
+                    buf = None
+                comment = True
+            elif (c == '(') and (quote is None):
+                if buf is not None:
+                    stack[stackptr].append(buf)
+                    buf = None
+                stackptr += 1
+                if stackptr == len(stack):
+                    stack.append([])
+                else:
+                    stack[stackptr] = []
+            elif (c == ')') and (quote is None):
+                if buf is not None:
+                    stack[stackptr].append(buf)
+                    buf = None
+                if stackptr == 0:
+                    return stack[0]
+                stackptr -= 1
+                stack[stackptr].append(stack[stackptr + 1])
+            elif (c in ' \t\n\r\f') and (quote is None):
+                if buf is not None:
+                    stack[stackptr].append(buf)
+                    buf = None
+            else:
+                if buf is None:
+                    buf = ''
+                if c == '\\':
+                    escape = True
+                elif (c in '\'\"') and (quote is None):
+                    quote = c
+                else:
+                    buf += c
+        
+        raise Exception('premature end of file')
+    
 
 if __name__ == '__main__':
     Ponymenu()
