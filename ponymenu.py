@@ -265,6 +265,7 @@ class Ponymenu:
                             break
             if c == '\033[D':
                 c = chr(8)
+            
             if c.startswith('\033['):
                 if c == '\033[A':
                     printf('\033[%i;1H', selectedIndex + 5)
@@ -340,7 +341,9 @@ class Ponymenu:
             elif (len(c) == 1) and ((ord(c) >= 32) or (c == chr(8)) or (c == chr(127))):
                 further = False
                 if (c == chr(8)) or (c == chr(127)):
-                    searchString = searchString[:max(len(searchString) - 1, 0)]
+                    if len(searchString) == 0:
+                        continue
+                    searchString = searchString[:len(searchString) - 1]
                 else:
                     searchString += c
                     further = True
