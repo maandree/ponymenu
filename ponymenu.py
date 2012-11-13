@@ -169,7 +169,7 @@ class Ponymenu:
         finally:
             Popen(['stty', 'icanon', 'echo', 'isig', 'ixoff', 'ixon', 'ixany'], stdin=sys.stdout).wait()
             if TERM_INIT:
-                print('\033[?25h\033[?1049l', end='')
+                print('\033[1;1H\033[2J\033[?25h\033[?1049l', end='')
             if action is not None:
                 action()
     
@@ -213,7 +213,7 @@ class Ponymenu:
     
     def interact(self):
         fill = ' ' * self.termw
-        printf('\033[m\033[1;1H\033[2K\033[7;1m%s\033[27;21m\033[%i;1H\033[7m%s\033[27m\n%s\033[5;1H', ' ponymenu, press C-q to quit' + fill[28:], self.termh - 1, fill, '\033[7;41;1m<\033[m' + fill[1:])
+        printf('\033[m\033[1;1H\033[2J\033[7;1m%s\033[27;21m\033[%i;1H\033[7m%s\033[27m\n%s\033[5;1H', ' ponymenu, press C-q to quit' + fill[28:], self.termh - 1, fill, '\033[7;41;1m<\033[m' + fill[1:])
         
         def clean(items):
             i = 0
