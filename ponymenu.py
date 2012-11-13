@@ -1,3 +1,389 @@
 #!/usr/bin/env python3
 # -*- mode: python, coding: utf-8 -*-
 
+
+import os
+import sys
+from subprocess import Popen, PIPE
+
+
+TERM_INIT = True
+
+
+
+'''
+Hack to enforce UTF-8 in output (in the future, if you see anypony not using utf-8 in
+programs by default, report them to Princess Celestia so she can banish them to the moon)
+
+@param  text:str  The text to print (empty string is default)
+@param  end:str   The appendix to the text to print (line breaking is default)
+'''
+def print(text = '', end = '\n'):
+    sys.stdout.buffer.write((str(text) + end).encode('utf-8'))
+    sys.stdout.buffer.flush()
+
+'''
+stderr equivalent to print()
+
+@param  text:str  The text to print (empty string is default)
+@param  end:str   The appendix to the text to print (line breaking is default)
+'''
+def printerr(text = '', end = '\n'):
+    sys.stderr.buffer.write((str(text) + end).encode('utf-8'))
+    sys.stderr.buffer.flush()
+
+
+def printf(master, *slave):
+    sys.stdout.buffer.write((master % slave).encode('utf-8'))
+
+def flush():
+    sys.stdout.buffer.flush()
+
+
+
+class Ponymenu:
+    def __init__(self):
+        action = None
+        try:
+            if TERM_INIT:
+                print('\033[?1049h\033[?25l', end='')
+            Popen(['stty', '-icanon', '-echo', '-isig', '-ixoff', '-ixon', '-ixany'], stdin=sys.stdout).wait()
+            
+            
+            termsize = (24, 80)
+            for channel in (sys.stderr, sys.stdout, sys.stdin):
+                termsize = Popen(['stty', 'size'], stdin=channel, stdout=PIPE, stderr=PIPE).communicate()[0]
+                if len(termsize) > 0:
+                    termsize = termsize.decode('utf8', 'replace')[:-1].split(' ') # [:-1] removes a \n
+                    termsize = [int(item) for item in termsize]
+                    break
+            
+            (self.termh, self.termw) = termsize
+            
+            
+            self.HOME = os.environ['HOME'] if 'HOME' in os.environ else ''
+            if len(self.HOME) == 0:
+                os.environ['HOME'] = self.HOME = os.path.expanduser('~')
+            
+            
+            '''
+            Parse a file name encoded with environment variables
+            
+            @param   file  The encoded file name
+            @return        The target file name, None if the environment variables are not declared
+            '''
+            def parsefile(file):
+                if '$' in file:
+                    buf = ''
+                    esc = False
+                    var = None
+                    for c in file:
+                        if esc:
+                            buf += c
+                            esc = False
+                        elif var is not None:
+                            if c == '/':
+                                var = os.environ[var] if var in os.environ else ''
+                                if len(var) == 0:
+                                    return None
+                                buf += var + c
+                                var = None
+                            else:
+                                var += c
+                        elif c == '$':
+                            var = ''
+                        elif c == '\\':
+                            esc = True
+                        else:
+                            buf += c
+                    return buf
+                return file
+            
+            
+            self.env = os.environ
+            self.linuxvt = ('TERM' in self.env) and (self.env['TERM'] == 'linux')
+            self.display = ('DISPLAY' in self.env) and self.env['DISPLAY'].startswith(':')
+            self.graphical = self.display and not self.linuxvt
+            
+            
+            ## Change system enviroment variables with ponymenurc
+            for file in ('$XDG_CONFIG_HOME/ponymenu/ponymenurc',
+                         '$HOME/.config/ponymenu/ponymenurc',
+                         '$HOME/.ponymenurc',
+                         '/etc/ponymenurc'):
+                file = parsefile(file)
+                if (file is not None) and os.path.exists(file):
+                    with open(file, 'rb') as ponymenurc:
+                        code = ponymenurc.read().decode('utf8', 'replace') + '\n'
+                        code = compile(code, file, 'exec')
+                        exec(code)
+                    break
+            
+            
+            self.HOME = self.env['HOME'] if 'HOME' in self.env else '' # in case ~/.ponymenurc changes it
+            if len(self.HOME) == 0:
+                self.env['HOME'] = self.HOME = os.path.expanduser('~')
+            
+            
+            menuFound = False
+            self.root = Entry(None, None, None, [])
+            
+            for file in ('$XDG_CONFIG_HOME/ponymenu/ponymenu',
+                         '$HOME/.config/ponymenu/ponymenu',
+                         '$HOME/.ponymenu',
+                         '/etc/ponymenu'):
+                file = parsefile(file)
+                if (file is not None) and os.path.exists(file):
+                    with open(file, 'rb') as ponymenu:
+                        code = ponymenu.read().decode('utf8', 'replace')
+                        self.loadMenu(code)
+                        menuFound = True
+                    break
+            
+            if not menuFound:
+                Popen(['stty', 'icanon', 'echo', 'isig', 'ixoff', 'ixon'], stdin=sys.stdout).wait()
+                if TERM_INIT:
+                    print('\033[?1049h', end='')
+                print('ponymenu: no menu file found')
+                return
+            
+            action = self.interact()
+            
+        finally:
+            Popen(['stty', 'icanon', 'echo', 'isig', 'ixoff', 'ixon', 'ixany'], stdin=sys.stdout).wait()
+            if TERM_INIT:
+                print('\033[?25h\033[?1049l', end='')
+            if action is not None:
+                action()
+    
+    
+    def loadMenu(self, code):
+        ## TODO implement actual
+        self.root.inner = [Entry('cookies', 'c', None, [Entry('fortune-mod', 'regular fortune cookies',  ['fortune'], None),
+                                                        Entry('pinkiepie', 'ponified fortune cookies', ['sh', 'pinkie'], None),
+                                                        Entry('sex', 'nasty fortune cookies', ['sex'], None)]),
+                           Entry('pony printers', 'p', None, [Entry('ponysay', 'Block based', ['ponysay', '--q'], None),
+                                                              Entry('cowsay', 'ASCII based', ['bash', '-c', 'pinkie | cowsay'], None)]),
+                           Entry('empty', None, None, []),
+                           Entry('void', None, None, None)]
+    
+    
+    @staticmethod
+    def execute(command):
+        Popen(command, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr).wait()
+    
+    
+    def interact(self):
+        fill = ' ' * self.termw
+        printf('\033[m\033[1;1H\033[2K\033[7;1m%s\033[27;21m\033[%i;1H\033[7m%s\033[27m\n%s\033[5;1H', ' ponymenu, press C-q to quit' + fill[28:], self.termh - 1, fill, '\033[7;41;1m<\033[m' + fill[1:])
+        
+        def clean(items):
+            i = 0
+            while i < len(items):
+                item = items[i]
+                if item.cmd is None:
+                    if (item.inner is None) or (len(item.inner) == 0):
+                        items[i : i + 1] = []
+                        continue
+                i += 1
+            return items
+        
+        stack = []
+        allitems = clean(self.root.inner)
+        items = allitems
+        maxlen = UCS.dispLen(max([entry.name for entry in items], key = UCS.dispLen))
+        selectedIndex = 0
+        count = len(items)
+        
+        def printEntry(entry, selected):
+            printf('    %s \033[%sm%s%s\033[21m%s%s\033[m\n', '\033[1;34m>\033[m' if selected else ' ',
+                                                              ('1;37;44' if self.linuxvt else '97;44') if selected else '34',
+                                                              entry.name, fill[UCS.dispLen(entry.name) : maxlen + 12],
+                                                              entry.desc, fill[maxlen + 12 + 6 + UCS.dispLen(entry.desc):])
+        
+        searchString = ''
+        def printSearch():
+            printf('\033[%i;1H\033[K%s\033[7;41;1m<\033[m', self.termh, searchString)
+        
+        def printAll(items, selectedIndex):
+            for entry in items:
+                selected = entry is items[selectedIndex]
+                printEntry(entry, selected)
+        
+        printAll(items, selectedIndex)
+        
+        while True:
+            flush()
+            c = sys.stdin.read(1)
+            if (ord(c) == ord('Q') - ord('@')) or (ord(c) == ord('D') - ord('@')):
+                break
+            if c == '\033':
+                c += sys.stdin.read(1)
+                if c == '\033[':
+                    while True:
+                        end = sys.stdin.read(1)
+                        c += end
+                        if (end == '~') or (('a' <= end) and (end <= 'z')) or (('A' <= end) and (end <= 'Z')) or (ord(end) == ord('G') - ord('@')):
+                            break
+            if c == '\033[D':
+                c = chr(8)
+            if c.startswith('\033['):
+                if c == '\033[A':
+                    printf('\033[%i;1H', selectedIndex + 5)
+                    printEntry(items[selectedIndex], False)
+                    selectedIndex = (count if selectedIndex == 0 else selectedIndex) - 1
+                    printf('\033[%i;1H', selectedIndex + 5)
+                    printEntry(items[selectedIndex], True)
+                elif c == '\033[B':
+                    printf('\033[%i;1H', selectedIndex + 5)
+                    printEntry(items[selectedIndex], False)
+                    selectedIndex = (selectedIndex + 1) % count
+                    printf('\033[%i;1H', selectedIndex + 5)
+                    printEntry(items[selectedIndex], True)
+                elif c == '\033[C':
+                    at = len(searchString)
+                    while True:
+                        expand = True
+                        if at == len(items[0].name):
+                            break
+                        else:
+                            expect = items[0].name[at]
+                            for item in items:
+                                if item.name[at] != expect:
+                                    expand = False
+                                    break
+                        if expand:
+                            at += 1
+                        else:
+                            break
+                    if at != len(searchString):
+                        searchString = items[0].name[:at]
+                        drop = count
+                        newItems = []
+                        for item in items:
+                            if item.name.startswith(searchString):
+                                newItems.append(item)
+                        items = newItems
+                        count = len(items)
+                        selectedIndex %= count
+                        drop = '\033[5;1H' + (fill + '\n') * drop
+                        printf(drop + '\033[5;1H')
+                        printAll(items, selectedIndex)
+                        printSearch()
+            elif (c == '\n') or (c == '\t'):
+                if c == '\n':
+                    stack.append(allitems)
+                    item = items[selectedIndex]
+                    if item.inner is not None:
+                        allitems = clean(item.inner)
+                    else:
+                        class ExecFunctor:
+                            def __init__(self, command):
+                                self.command = command
+                            def __call__(self):
+                                Ponymenu.execute(self.command)
+                        return ExecFunctor(item.cmd)
+                else:
+                    if len(stack) == 0:
+                        continue
+                    allitems = stack[-1]
+                    stack = stack[:-1]
+                items = allitems
+                searchString = ''
+                selectedIndex = 0
+                drop = count
+                count = len(items)
+                drop = '\033[5;1H' + (fill + '\n') * drop
+                printf(drop + '\033[5;1H')
+                printAll(items, selectedIndex)
+                printSearch()
+            elif (len(c) == 1) and ((ord(c) >= 32) or (c == chr(8)) or (c == chr(127))):
+                further = False
+                if (c == chr(8)) or (c == chr(127)):
+                    searchString = searchString[:max(len(searchString) - 1, 0)]
+                else:
+                    searchString += c
+                    further = True
+                newItems = []
+                for item in (items if further else allitems):
+                    if item.name.startswith(searchString):
+                        newItems.append(item)
+                if len(newItems) == 0:
+                    searchString = searchString[:~0]
+                else:
+                    items = newItems
+                    drop = count
+                    count = len(items)
+                    selectedIndex %= count
+                    drop = '\033[5;1H' + (fill + '\n') * drop
+                    printf(drop + '\033[5;1H')
+                    printAll(items, selectedIndex)
+                printSearch()
+        
+        return None
+
+
+class Entry:
+    def __init__(self, name, desc, cmd, inner):
+        self.name = name
+        self.desc = '' if desc is None else desc
+        self.cmd = cmd
+        self.inner = inner
+    
+    def __cmp__(self, other):
+        if (self.cmd is None) ^ (other.cmd is None):
+            return -1 if self.cmd is None else 1
+        return cmp(self.name, other.name)
+
+
+
+'''
+UCS utility class
+'''
+class UCS():
+    '''
+    Checks whether a character is a combining character
+    
+    @param   char:chr  The character to test
+    @return  :bool     Whether the character is a combining character
+    '''
+    @staticmethod
+    def isCombining(char):
+        o = ord(char)
+        if (0x0300 <= o) and (o <= 0x036F):  return True
+        if (0x20D0 <= o) and (o <= 0x20FF):  return True
+        if (0x1DC0 <= o) and (o <= 0x1DFF):  return True
+        if (0xFE20 <= o) and (o <= 0xFE2F):  return True
+        return False
+    
+    
+    '''
+    Gets the number of combining characters in a string
+    
+    @param   string:str  A text to count combining characters in
+    @return  :int        The number of combining characters in the string
+    '''
+    @staticmethod
+    def countCombining(string):
+        rc = 0
+        for char in string:
+            if UCS.isCombining(char):
+                rc += 1
+        return rc
+    
+    
+    '''
+    Gets length of a string not counting combining characters
+    
+    @param   string:str  The text of which to determine the monospaced width
+    @return              The determine the monospaced width of the text, provided it does not have escape sequnces
+    '''
+    @staticmethod
+    def dispLen(string):
+        return len(string) - UCS.countCombining(string)
+    
+
+
+if __name__ == '__main__':
+    Ponymenu()
+
