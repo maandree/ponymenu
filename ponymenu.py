@@ -218,6 +218,7 @@ class Ponymenu:
         maxlen = UCS.dispLen(max([entry.name for entry in items], key = UCS.dispLen))
         selectedIndex = 0
         count = len(items)
+        offset = 0
         
         def printEntry(entry, selected, maxlen):
             printf('    %s \033[%sm%s%s\033[21m%s%s\033[m\n', '\033[1;34m>\033[m' if selected else ' ',
@@ -229,12 +230,21 @@ class Ponymenu:
         def printSearch():
             printf('\033[%i;1H\033[K%s\033[7;41;1m<\033[m', self.termh, searchString)
         
-        def printAll(items, selectedIndex, maxlen):
+        def printAll(items, selectedIndex, maxlen, offset):
+            index = 0
+            ending = 0
             for entry in items:
-                selected = entry is items[selectedIndex]
-                printEntry(entry, selected, maxlen)
+                if index >= offset:
+                    if index >= offset + self.termh - 8:
+                        ending += 1
+                    else:
+                        selected = entry is items[selectedIndex]
+                        printEntry(entry, selected, maxlen)
+                index += 1
+            arrows = min(len(filldown), ending)
+            printf('      %s%s', filldown[:arrows], fill[arrows:])
         
-        def redraw(items, selectedIndex, maxlen):
+        def redraw(items, selectedIndex, maxlen, offset):
             termsize = (24, 80)
             for channel in (sys.stderr, sys.stdout, sys.stdin):
                 termsize = Popen(['stty', 'size'], stdin=channel, stdout=PIPE, stderr=PIPE).communicate()[0]
@@ -246,12 +256,17 @@ class Ponymenu:
             (self.termh, self.termw) = termsize
             
             global fill
+            global filldown
             fill = ' ' * self.termw
-            printf('\033[m\033[1;1H\033[2J\033[7;1m%s\033[27;21m\033[%i;1H\033[7m%s\033[27m\n%s\033[5;1H', ' ponymenu, press C-q to quit' + fill[28:], self.termh - 1, fill, '\033[7;41;1m<\033[m' + fill[1:])
+            filldown = '↓' * (self.termw - 6)
+            fillup = '↑' * (self.termw - 6)
+            printf('\033[m\033[1;1H\033[2J\033[7;1m%s\033[27;21m\033[%i;1H\033[7m%s\033[27m\n%s\033[4;1H', ' ponymenu, press C-q to quit' + fill[28:], self.termh - 1, fill, '\033[7;41;1m<\033[m' + fill[1:])
+            arrows = min(len(fillup), offset)
+            printf('      %s%s\033[5;1H', fillup[:arrows], fill[arrows:])
             
-            printAll(items, selectedIndex, maxlen)
+            printAll(items, selectedIndex, maxlen, offset)
         
-        redraw(items, selectedIndex, maxlen)
+        redraw(items, selectedIndex, maxlen, offset)
         
         global fill
         while True:
@@ -271,20 +286,40 @@ class Ponymenu:
                 c = chr(8)
             
             if c == chr(ord('L') - ord('@')):
-                redraw(items, selectedIndex, maxlen)
+                redraw(items, selectedIndex, maxlen, offset)
             elif c.startswith('\033['):
                 if c == '\033[A':
-                    printf('\033[%i;1H', selectedIndex + 5)
+                    printf('\033[%i;1H', selectedIndex + 5 - offset)
                     printEntry(items[selectedIndex], False, maxlen)
                     selectedIndex = (count if selectedIndex == 0 else selectedIndex) - 1
-                    printf('\033[%i;1H', selectedIndex + 5)
-                    printEntry(items[selectedIndex], True, maxlen)
+                    oldOffset = offset
+                    while selectedIndex < offset:
+                        offset -= (self.termh - 8) >> 1
+                    if offset < 0:
+                        offset = 0
+                    while selectedIndex >= offset + self.termh - 8:
+                        offset = count - self.termh + 9
+                    if offset == oldOffset:
+                        printf('\033[%i;1H', selectedIndex + 5 - offset)
+                        printEntry(items[selectedIndex], True, maxlen)
+                    else:
+                        redraw(items, selectedIndex, maxlen, offset)
                 elif c == '\033[B':
-                    printf('\033[%i;1H', selectedIndex + 5)
+                    printf('\033[%i;1H', selectedIndex + 5 - offset)
                     printEntry(items[selectedIndex], False, maxlen)
                     selectedIndex = (selectedIndex + 1) % count
-                    printf('\033[%i;1H', selectedIndex + 5)
-                    printEntry(items[selectedIndex], True, maxlen)
+                    if selectedIndex == 0:
+                        offset = 0
+                        redraw(items, selectedIndex, maxlen, offset)
+                    else:
+                        oldOffset = offset
+                        while selectedIndex >= offset + self.termh - 8:
+                            offset += (self.termh - 8) >> 1
+                        if offset == oldOffset:
+                            printf('\033[%i;1H', selectedIndex + 5 - offset)
+                            printEntry(items[selectedIndex], True, maxlen)
+                        else:
+                            redraw(items, selectedIndex, maxlen, offset)
                 elif c == '\033[C':
                     at = len(searchString)
                     while True:
@@ -311,11 +346,10 @@ class Ponymenu:
                         items = newItems
                         count = len(items)
                         selectedIndex %= count
+                        selectedIndex %= self.termh - 8
                         drop = '\033[5;1H' + (fill + '\n') * drop
                         maxlen = UCS.dispLen(max([entry.name for entry in items], key = UCS.dispLen))
-                        printf(drop + '\033[5;1H')
-                        printAll(items, selectedIndex, maxlen)
-                        printSearch()
+                        redraw(items, selectedIndex, maxlen, offset)
             elif (c == '\n') or (c == '\t'):
                 if c == '\n':
                     stack.append(allitems)
@@ -341,9 +375,7 @@ class Ponymenu:
                 count = len(items)
                 drop = '\033[5;1H' + (fill + '\n') * drop
                 maxlen = UCS.dispLen(max([entry.name for entry in items], key = UCS.dispLen))
-                printf(drop + '\033[5;1H')
-                printAll(items, selectedIndex, maxlen)
-                printSearch()
+                redraw(items, selectedIndex, maxlen, offset)
             elif (len(c) == 1) and ((ord(c) >= 32) or (c == chr(8)) or (c == chr(127))):
                 further = False
                 if (c == chr(8)) or (c == chr(127)):
@@ -364,10 +396,11 @@ class Ponymenu:
                     drop = count
                     count = len(items)
                     selectedIndex %= count
+                    selectedIndex %= self.termh - 8
                     drop = '\033[5;1H' + (fill + '\n') * drop
                     maxlen = UCS.dispLen(max([entry.name for entry in items], key = UCS.dispLen))
                     printf(drop + '\033[5;1H')
-                    printAll(items, selectedIndex, maxlen)
+                    printAll(items, selectedIndex, maxlen, offset)
                 printSearch()
         
         return None
