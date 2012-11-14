@@ -221,10 +221,19 @@ class Ponymenu:
         offset = 0
         
         def printEntry(entry, selected, maxlen):
-            printf('    %s \033[%sm%s%s\033[21m%s%s\033[m\n', '\033[1;34m>\033[m' if selected else ' ',
-                                                              ('1;37;44' if self.linuxvt else '97;44') if selected else '34',
-                                                              entry.name, fill[UCS.dispLen(entry.name) : maxlen + 12],
-                                                              entry.desc, fill[maxlen + 12 + 6 + UCS.dispLen(entry.desc):])
+            first = entry.name + fill[UCS.dispLen(entry.name) : maxlen + 12]
+            second = entry.desc + fill[maxlen + 12 + 6 + UCS.dispLen(entry.desc):]
+            if len(first) >= self.termw - 6:
+                second = ''
+                if len(entry.name) > self.termw - 6:
+                    first = entry.name[:self.termw - 6 - 1] + '…'
+                else:
+                    first = first[:self.termw - 6]
+            elif len(first) + len(second) > self.termw - 6:
+                second = second[:self.termw - 6 - len(first) - 1] + '…'
+            printf('    %s \033[%sm%s\033[21m%s\033[m\n', '\033[1;34m>\033[m' if selected else ' ',
+                                                          ('1;37;44' if self.linuxvt else '97;44') if selected else '34',
+                                                          first, second)
         
         searchString = ''
         def printSearch():
@@ -399,8 +408,7 @@ class Ponymenu:
                     selectedIndex %= self.termh - 8
                     drop = '\033[5;1H' + (fill + '\n') * drop
                     maxlen = UCS.dispLen(max([entry.name for entry in items], key = UCS.dispLen))
-                    printf(drop + '\033[5;1H')
-                    printAll(items, selectedIndex, maxlen, offset)
+                    redraw(items, selectedIndex, maxlen, offset)
                 printSearch()
         
         return None
