@@ -168,7 +168,7 @@ class Ponymenu:
             rc = []
             for item in items:
                 (name, desc, cmd, inner) = (None, None, None, None)
-                add = True
+                add = None
                 for tag in item:
                     if   tag[0] == 'name':  name = ' '.join(tag[1:])
                     elif tag[0] == 'desc':  desc = ' '.join(tag[1:])
@@ -179,7 +179,7 @@ class Ponymenu:
                     elif tag[0] == 'inner':
                         inner = make(tag[1:])
                     elif tag[0] == 'req':
-                        for req in tag[0]:
+                        for req in tag[1:]:
                             if not isinstance(req, list):
                                 req = [req]
                             qual = True
@@ -188,7 +188,11 @@ class Ponymenu:
                                     qual &= not self.graphical
                                 elif (r == 'x') or (r == 'graphical'):
                                     qual &= self.graphical
+                            if add is None:
+                                add = False
                             add |= qual
+                if add is None:
+                    add = True
                 if add:
                     rc.append(Entry(name, desc, cmd, inner))
             return rc
