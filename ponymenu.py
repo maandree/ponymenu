@@ -278,6 +278,7 @@ class Ponymenu:
             printf('      %s%s\033[5;1H', fillup[:arrows], fill[arrows:])
             
             printAll(items, selectedIndex, maxlen, offset)
+            printSearch()
         
         redraw(items, selectedIndex, maxlen, offset)
         
