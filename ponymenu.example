@@ -1,3 +1,5 @@
+; You may want to create a personal menu in $XDG_CONFIG_HOME/ponymenu/ponymenu, or just ~/.ponymenu
+
 (
 	; using xdg-open to determine Web browser, only listed in graphical environments
 	((name arch linux) (inner
@@ -220,6 +222,6 @@
 		
 	))
 	
-	((name --edit--) (cmd bash -c '$EDITOR $XDG_CONFIG_HOME/ponymenu/ponymenu') (desc Edit this menu))
+	((name --edit--) (cmd bash -c '$EDITOR /etc/ponymenu') (desc Edit this menu))
 )
 
