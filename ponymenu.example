@@ -1,5 +1,14 @@
 ; You may want to create a personal menu in $XDG_CONFIG_HOME/ponymenu/ponymenu, or just ~/.ponymenu
 
+
+; Copying and distribution of this file, with or without modification,
+; are permitted in any medium without royalty provided the copyright
+; notice and this notice are preserved.  This file is offered as-is,
+; without any warranty.
+
+; [GNU All Permissive License]
+
+
 (
 	; using xdg-open to determine Web browser, only listed in graphical environments
 	((name arch linux) (inner
