@@ -25,6 +25,13 @@ from subprocess import Popen, PIPE
 
 
 
+VERSION = 1.0
+'''
+This version ponymenu
+'''
+
+
+
 TERM_INIT = True
 '''
 Set to false if debugging
@@ -609,5 +616,35 @@ class Parser:
 
 
 if __name__ == '__main__':
+    for arg in sys.argv[1:]:
+        if arg in ('-h', '--help'):
+            print('ponymenu – terminal based application menu')
+            print()
+            print('Run `info ponymenu` for usage information')
+            print()
+            print('-h,  --help        Print this table')
+            print('-v,  --version     Print the program name and version')
+            print('-c,  --copyright   Print copyright information')
+        elif arg in ('-v', '--version'):
+            print('ponymenu ' + VERSION)
+        elif arg in ('-c', '--copyright'):
+            print('ponymenu – terminal based application menu')
+            print()
+            print('Copyright © 2012  Mattias Andrée (maandree@kth.se)')
+            print()
+            print('This program is free software: you can redistribute it and/or modify')
+            print('it under the terms of the GNU General Public License as published by')
+            print('the Free Software Foundation, either version 3 of the License, or')
+            print('(at your option) any later version.')
+            print()
+            print('This program is distributed in the hope that it will be useful,')
+            print('but WITHOUT ANY WARRANTY; without even the implied warranty of')
+            print('MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the')
+            print('GNU General Public License for more details.')
+            print()
+            print('You should have received a copy of the GNU General Public License')
+            print('along with this program.  If not, see <http://www.gnu.org/licenses/>.')
+        else:
+            printerr('ponymenu: unrecognised option: ' + arg)
     Ponymenu()
 

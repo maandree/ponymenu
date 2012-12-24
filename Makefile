@@ -10,6 +10,10 @@ install:
 	install -m 755 ponymenu.py "$(DESTDIR)$(PREFIX)$(BINDIR)/ponymenu"
 	install -m 644 ponymenu.example "$(DESTDIR)$(SYSCONFDIR)/ponymenu"
 
+uninstall:
+	unlink "$(PREFIX)$(BINDIR)/ponymenu"
+	unlink "$(SYSCONFDIR)/ponymenu"
+
 clean:
 	@echo nothing to clean
 
