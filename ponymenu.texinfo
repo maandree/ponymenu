@@ -1,0 +1,188 @@
+\input texinfo   @c -*-texinfo-*-
+
+@c %**start of header
+@setfilename ponymenu.info
+@settitle ponymenu
+@afourpaper
+@documentencoding UTF-8
+@documentlanguage en
+@finalout
+@c %**end of header
+
+
+@defindex op
+@synindex op vr
+@synindex cp pg
+
+
+@copying
+This manual is for ponymenu.
+
+Copyright @copyright{} 2012 Mattias Andrée
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, with no Front-Cover Texts, and with no Back-Cover
+Texts. A copy of the license is included in the section entitled
+``GNU Free Documentation License''.
+@end quotation
+@end copying
+
+
+@ifnottex
+@node Top
+@top Terminal based application menu
+@insertcopying
+@end ifnottex
+
+@titlepage
+@title ponymenu
+@subtitle Terminal based application menu
+@author Mattias Andrée, maandree@@kth.se
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+@contents
+
+
+
+@menu
+* Overview::                          Overview of ponymenu.
+* Invoking::                          Invoking ponymenu.
+* Configure::                         Configuring ponymenu.
+* Interaction::                       Using ponymenu, interaction.
+* License of ponymenu::               License of ponymenu.
+* GNU General Public License::        GNU General Public License.
+* GNU Free Documentation License::    GNU Free Documentation License.
+@c * Concept index::                     Concept index.
+@end menu
+
+
+
+@node Overview
+@chapter Overview
+
+ponymenu as a terminal based application menu program that
+allowed you to make your own menu with multiple levels,
+that can be quickly browsed in the terminal.
+
+This is more comfortably and faster than a normal graphical
+application menu, and it can even be used in the TTY, which
+is create of you have many programs that are started with
+arguments or if you do not know every program's name.
+
+
+
+@node Invoking
+@chapter Invoking
+
+To run ponymenu, just execute @command{ponymenu}.
+
+Options that you can execute @command{ponymenu} with, none
+of which will start the menu.
+
+@table @command
+@item -v
+@itemx --version
+Get the installed version of ponymenu.
+@item -h
+@itemx --help
+Print a very short help.
+@item -c
+@itemx --copyright
+Print copyright information.
+@end table
+
+It is recommended to make a one letter (for example @command{q}
+if you are using qwerty of qwertz) alias to ponysay in you shell.
+
+
+
+@node Configure
+@chapter Configure
+
+The menu is loaded from one of the following files,
+it is selected in top down order:
+@enumerate 1
+@item @file{$@{XDG_CONFIG_HOME@}/ponymenu/ponymenu}
+@item @file{$@{HOME@}/.config/ponymenu/ponymenu}
+@item @file{$@{HOME@}/.ponymenu}
+@item @file{/etc/ponymenu}
+@end enumerate
+
+This configuration uses a rooted bracket tree structure. The
+file must contain exactly one top level round bracket, which
+can contain additional brackets. These inner brackets contains
+key–value pair brackets. A comment in file is started with a
+semicolon (;) and contains until the end of the file. Brackets
+contains either strings or other brackets, strings may be
+written in quoted form. In other configuration files there are
+five key names, the key is the first string in a bracket, there
+others are values.
+
+@table @code
+@item name
+The name of the menu item. All values are concatenated, with
+one blank space as delimited, into one value.
+@item req
+Requirement for showing the menu item. @code{x} for only
+visible in graphical environments, @code{tty} for only visible
+in non-graphical environments.
+@item cmd
+The command to run, which value is one argument.
+@item desc
+A one line description of the menu item. All values are
+concatenated, with one blank space as delimited, into one value.
+@item inner
+Inner menu items.
+@end table
+
+
+@node Interaction
+@chapter Interaction
+
+TODO
+
+
+
+@node License of ponymenu
+@appendix License of ponymenu
+
+@flushleft
+ponymenu – terminal based application menu
+
+Copyright © 2012  Mattias Andrée (maandree@@kth.se)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+@end flushleft
+
+@node GNU General Public License
+@appendix GNU General Public License
+@include gpl.texinfo
+
+@node GNU Free Documentation License
+@appendix GNU Free Documentation License
+@include fdl.texinfo
+
+@c @node Concept index
+@c @appendix Concept index
+@c @printindex pg
+
+
+@bye
+

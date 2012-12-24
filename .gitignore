@@ -1,7 +1,13 @@
-/_/
+_/
 
-/__pycache__/
+__pycache__/
 *.pyc
+*.gz
+*.xz
+*.info
+*.pdf
+*.ps
+*.dvi
 
 *~
 \#*\#
