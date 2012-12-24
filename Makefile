@@ -1,15 +1,17 @@
 PREFIX=/usr
+BINDIR=/bin
+SYSCONFDIR=/etc
 
 all:
-	@: do nothing
 
 install:
-	mkdir -p "$(DESTDIR)$(PREFIX)/bin"
-	mkdir -p "$(DESTDIR)/etc"
-	install -m 755 ponymenu.py "$(DESTDIR)$(PREFIX)/bin/ponymenu"
-	install -m 644 ponymenu.example "$(DESTDIR)/etc/ponymenu"
+	mkdir -p "$(DESTDIR)$(PREFIX)$(BINDIR)"
+	mkdir -p "$(DESTDIR)$(SYSCONFDIR)"
+	install -m 755 ponymenu.py "$(DESTDIR)$(PREFIX)$(BINDIR)/ponymenu"
+	install -m 644 ponymenu.example "$(DESTDIR)$(SYSCONFDIR)/ponymenu"
 
 clean:
 	@echo nothing to clean
 
 .PHONY: clean
+
