@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-# -*- mode: python, coding: utf-8 -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 '''
 ponymenu – terminal based application menu
 
@@ -24,42 +24,59 @@ import sys
 from subprocess import Popen, PIPE
 
 
+
 TERM_INIT = True
-
-
-
 '''
-Hack to enforce UTF-8 in output (in the future, if you see anypony not using utf-8 in
-programs by default, report them to Princess Celestia so she can banish them to the moon)
+Set to false if debugging
 
-@param  text:str  The text to print (empty string is default)
-@param  end:str   The appendix to the text to print (line breaking is default)
+This flag specifies whether the terminal will be initialised
 '''
+
+
+
 def print(text = '', end = '\n'):
+    '''
+    Hack to enforce UTF-8 in output (in the future, if you see anypony not using utf-8 in
+    programs by default, report them to Princess Celestia so she can banish them to the moon)
+    
+    @param  text:str  The text to print (empty string is default)
+    @param  end:str   The appendix to the text to print (line breaking is default)
+    '''
     sys.stdout.buffer.write((str(text) + end).encode('utf-8'))
     sys.stdout.buffer.flush()
 
-'''
-stderr equivalent to print()
-
-@param  text:str  The text to print (empty string is default)
-@param  end:str   The appendix to the text to print (line breaking is default)
-'''
 def printerr(text = '', end = '\n'):
+    '''
+    stderr equivalent to print()
+    
+    @param  text:str  The text to print (empty string is default)
+    @param  end:str   The appendix to the text to print (line breaking is default)
+    '''
     sys.stderr.buffer.write((str(text) + end).encode('utf-8'))
     sys.stderr.buffer.flush()
 
-
 def printf(master, *slave):
+    '''
+    Print a non-ended line to stdout with formating
+    '''
     sys.stdout.buffer.write((master % slave).encode('utf-8'))
 
 def flush():
+    '''
+    Flush stdout
+    '''
     sys.stdout.buffer.flush()
 
 
 
 class Ponymenu:
+    '''
+    Ponymenu mane class
+    '''
     def __init__(self):
+        '''
+        Constructor and mane
+        '''
         action = None
         try:
             if TERM_INIT:
@@ -164,6 +181,11 @@ class Ponymenu:
     
     
     def loadMenu(self, code):
+        '''
+        Load the menu
+        
+        @param  code:str  Unparsed menu markup
+        '''
         def make(items):
             rc = []
             for item in items:
@@ -201,10 +223,18 @@ class Ponymenu:
     
     @staticmethod
     def execute(command):
+        '''
+        Execute command
+        
+        @param  command:list<str>  The command
+        '''
         Popen(command, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr).wait()
     
     
     def interact(self):
+        '''
+        Start menu interaction
+        '''
         def clean(items):
             i = 0
             while i < len(items):
@@ -419,32 +449,50 @@ class Ponymenu:
         return None
 
 
+
 class Entry:
+    '''
+    Menu entry
+    '''
     def __init__(self, name, desc, cmd, inner):
+        '''
+        Constructor
+        
+        @param  name:str?          The title of the entry
+        @param  desc:str?          The description of the entry
+        @param  cmd:list<str>?     The command executed when running the entry
+        @param  inner:list<Entry>  Inner entries
+        '''
         self.name = name if name is not None else '[untitled]'
         self.desc = desc if desc is not None else ''
         self.cmd = cmd
         self.inner = inner
     
     def __cmp__(self, other):
+        '''
+        Comparator
+        
+        @param   other  The right hand comparand
+        @return         Less than zero if right hand is greater, more than zero if left hand is greater, otherwise 0
+        '''
         if (self.cmd is None) ^ (other.cmd is None):
             return -1 if self.cmd is None else 1
         return cmp(self.name, other.name)
 
 
 
-'''
-UCS utility class
-'''
 class UCS():
     '''
-    Checks whether a character is a combining character
-    
-    @param   char:chr  The character to test
-    @return  :bool     Whether the character is a combining character
+    UCS utility class
     '''
     @staticmethod
     def isCombining(char):
+        '''
+        Checks whether a character is a combining character
+        
+        @param   char:chr  The character to test
+        @return  :bool     Whether the character is a combining character
+        '''
         o = ord(char)
         if (0x0300 <= o) and (o <= 0x036F):  return True
         if (0x20D0 <= o) and (o <= 0x20FF):  return True
@@ -453,14 +501,14 @@ class UCS():
         return False
     
     
-    '''
-    Gets the number of combining characters in a string
-    
-    @param   string:str  A text to count combining characters in
-    @return  :int        The number of combining characters in the string
-    '''
     @staticmethod
     def countCombining(string):
+        '''
+        Gets the number of combining characters in a string
+        
+        @param   string:str  A text to count combining characters in
+        @return  :int        The number of combining characters in the string
+        '''
         rc = 0
         for char in string:
             if UCS.isCombining(char):
@@ -468,29 +516,30 @@ class UCS():
         return rc
     
     
-    '''
-    Gets length of a string not counting combining characters
-    
-    @param   string:str  The text of which to determine the monospaced width
-    @return              The determine the monospaced width of the text, provided it does not have escape sequnces
-    '''
     @staticmethod
     def dispLen(string):
+        '''
+        Gets length of a string not counting combining characters
+        
+        @param   string:str  The text of which to determine the monospaced width
+        @return              The determine the monospaced width of the text, provided it does not have escape sequnces
+        '''
         return len(string) - UCS.countCombining(string)
 
 
-'''
-Bracket tree parser
-'''
+
 class Parser:
     '''
-    Parse a code and return a tree
-    
-    @param   code:str      The code to parse
-    @return  :list<↑|str>  The root node in the tree
+    Bracket tree parser
     '''
     @staticmethod
     def parse(code):
+        '''
+        Parse a code and return a tree
+        
+        @param   code:str      The code to parse
+        @return  :list<↑|str>  The root node in the tree
+        '''
         stack = []
         stackptr = -1
         
@@ -557,6 +606,7 @@ class Parser:
         
         raise Exception('premature end of file')
     
+
 
 if __name__ == '__main__':
     Ponymenu()
