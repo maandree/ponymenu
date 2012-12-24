@@ -60,7 +60,7 @@
 		((name dosbox) (req x) (cmd dosbox) (desc An emulator to run old DOS games))
 		((name fceux) (req x) (cmd fceux) (desc Fast and ultra-compatible NES/Famicom emulator))
                 ((name gens/gs) (req x) (cmd gens) (desc Sega Genesis, Sega CD, and Sega 32X emulator))
-                ((nmae kega fusion) (req x) (cmd kega-fusion) (desc An emulator of classic Sega consoles))
+                ((name kega fusion) (req x) (cmd kega-fusion) (desc An emulator of classic Sega consoles))
                 ((name lxdream) (req x) (cmd lxdream) (desc Dreamcast Emulator))
 		((name nestopia) (req x) (cmd nestopia) (desc Accurate NES Emulator))
 		((name virtualbox) (req x) (cmd VirtualBox) (desc Run several virtual systems on a single host computer))
