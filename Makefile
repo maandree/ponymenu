@@ -13,12 +13,12 @@ DATADIR=/share
 SYSCONFDIR=/etc
 
 PROGRAM=ponymenu
-BOOK=$(PROGRAM)
+BOOK=ponymenu
 BOOKDIR=
 LANG=en_GB-ise-w_accents-only
 
 
-all:
+all: info
 
 
 info: $(BOOK).info.gz
@@ -75,12 +75,14 @@ install:
 	mkdir -p "$(DESTDIR)$(SYSCONFDIR)"
 	install -m 755 ponymenu.py "$(DESTDIR)$(PREFIX)$(BINDIR)/$(PROGRAM)"
 	install -m 644 ponymenu.example "$(DESTDIR)$(SYSCONFDIR)/$(PROGRAM)"
+	install -m 644 ponymenu.info.gz "$(PREFIX)$(DATADIR)/info/$(PROGRAM).info.gz"
 	install -m 644 COPYING "$(PREFIX)$(DATADIR)/licenses/$(PROGRAM)/COPYING"
 	install -m 644 LICENSE "$(PREFIX)$(DATADIR)/licenses/$(PROGRAM)/LICENSE"
 
 uninstall:
 	unlink "$(PREFIX)$(BINDIR)/ponymenu"
 	unlink "$(SYSCONFDIR)/ponymenu"
+	unlink "$(PREFIX)$(DATADIR)/info/$(PROGRAM).info.gz"
 	unlink "$(PREFIX)$(DATADIR)/licenses/$(PROGRAM)/COPYING"
 	unlink "$(PREFIX)$(DATADIR)/licenses/$(PROGRAM)/LICENSE"
 
@@ -97,7 +99,7 @@ clean-tex: clean.t2d- clean.aux- clean.cp- clean.cps- clean.fn- clean.ky- clean.
 .PHONY: clean.%-
 clean.%-:
 	@echo -e 'Cleaning \e[34m.$*\e[m'
-	@find ./ | grep '\.$*$$' | grep -v '^./lab3.pdf$$' | while read file; do  \
+	@find ./ | grep '\.$*$$' | while read file; do  \
 	    if [ -L "$$file" ]; then  file=$$(readlink "$$file");  fi;            \
 	    if [ -f "$$file" ]; then  $(RM)    "$$file";  fi;                     \
 	    if [ -d "$$file" ]; then  $(RM) -r "$$file";  fi;                     \
