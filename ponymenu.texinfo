@@ -142,10 +142,29 @@ Inner menu items.
 @end table
 
 
+
 @node Interaction
 @chapter Interaction
 
-TODO
+Use character keys filter the menu items, by
+which character they begin width. The additional
+keys are: 
+
+@table @kbd
+@item tab
+Go one level up in the menu.
+@item backspace
+@itemx left
+Erase one character from the filter.
+@item right
+Autocomplete as much as possible in the filter.
+@item up
+Go to the previous menu item.
+@item down
+Go to the next menu item.
+@item enter
+Run or enter select menu item.
+@end table
 
 
 
