@@ -16,3 +16,14 @@ will have the read parts of the code, to learn it.
 I suggest aliasing this program to `q`, or whatever
 character is under your left ring finger.
 
+
+Keybindings:
+
+C-q             Quit
+EOF             Quit
+Tab             Up one level
+Left            Erase last search character
+Backspace       Erase last search character
+Right           Autocomplete search
+Enter           Execute or open submenu
+
