@@ -73,6 +73,7 @@ grammar: ; link-parser < "$(BOOK).texinfo" 2>&1 | sed -e  \
 install:
 	mkdir -p "$(DESTDIR)$(PREFIX)$(BINDIR)"
 	mkdir -p "$(DESTDIR)$(SYSCONFDIR)"
+	mkdir -p "$(DESTDIR)$(PREFIX)$(DATADIR)/info/"
 	mkdir -p "$(DESTDIR)$(PREFIX)$(DATADIR)/licenses/$(PROGRAM)"
 	install -m 755 ponymenu.py "$(DESTDIR)$(PREFIX)$(BINDIR)/$(PROGRAM)"
 	install -m 644 ponymenu.example "$(DESTDIR)$(SYSCONFDIR)/$(PROGRAM)"
