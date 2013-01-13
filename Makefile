@@ -73,11 +73,12 @@ grammar: ; link-parser < "$(BOOK).texinfo" 2>&1 | sed -e  \
 install:
 	mkdir -p "$(DESTDIR)$(PREFIX)$(BINDIR)"
 	mkdir -p "$(DESTDIR)$(SYSCONFDIR)"
+	mkdir -p "$(DESTDIR)$(PREFIX)$(DATADIR)/licenses/$(PROGRAM)"
 	install -m 755 ponymenu.py "$(DESTDIR)$(PREFIX)$(BINDIR)/$(PROGRAM)"
 	install -m 644 ponymenu.example "$(DESTDIR)$(SYSCONFDIR)/$(PROGRAM)"
-	install -m 644 ponymenu.info.gz "$(PREFIX)$(DATADIR)/info/$(PROGRAM).info.gz"
-	install -m 644 COPYING "$(PREFIX)$(DATADIR)/licenses/$(PROGRAM)/COPYING"
-	install -m 644 LICENSE "$(PREFIX)$(DATADIR)/licenses/$(PROGRAM)/LICENSE"
+	install -m 644 ponymenu.info.gz "$(DESTDIR)$(PREFIX)$(DATADIR)/info/$(PROGRAM).info.gz"
+	install -m 644 COPYING "$(DESTDIR)$(PREFIX)$(DATADIR)/licenses/$(PROGRAM)/COPYING"
+	install -m 644 LICENSE "$(DESTDIR)$(PREFIX)$(DATADIR)/licenses/$(PROGRAM)/LICENSE"
 
 uninstall:
 	unlink "$(PREFIX)$(BINDIR)/ponymenu"
