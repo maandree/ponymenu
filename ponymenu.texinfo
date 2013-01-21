@@ -100,6 +100,11 @@ Print copyright information.
 It is recommended to make a one letter (for example @command{q}
 if you are using qwerty of qwertz) alias to ponysay in you shell.
 
+It is possible, although it is rather useless, to give
+@command{ponymenu} to add to the command line it executes.
+To do this add the argument @code{+} followed by the arguments
+you want to append.
+
 
 
 @node Configure
