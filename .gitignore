@@ -15,3 +15,21 @@ __pycache__/
 *.bak
 *.swp
 
+/dist/*/*/*
+!/dist/*/*/PKGBUILD
+
+/ponymenu.aux
+/ponymenu.cp
+/ponymenu.cps
+/ponymenu.fn
+/ponymenu.ky
+/ponymenu.log
+/ponymenu.pg
+/ponymenu.toc
+/ponymenu.tp
+/ponymenu.vr
+/ponymenu.op
+/ponymenu.ops
+/ponymenu.pgs
+/ponymenu.vrs
+

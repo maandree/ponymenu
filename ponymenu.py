@@ -3,7 +3,7 @@
 '''
 ponymenu – terminal based application menu
 
-Copyright © 2012  Mattias Andrée (maandree@kth.se)
+Copyright © 2012, 2013  Mattias Andrée (maandree@member.fsf.org)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -630,7 +630,7 @@ if __name__ == '__main__':
         elif arg in ('-c', '--copyright'):
             print('ponymenu – terminal based application menu')
             print()
-            print('Copyright © 2012  Mattias Andrée (maandree@kth.se)')
+            print('Copyright © 2012, 2013  Mattias Andrée (maandree@member.fsf.org)')
             print()
             print('This program is free software: you can redistribute it and/or modify')
             print('it under the terms of the GNU General Public License as published by')
