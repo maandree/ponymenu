@@ -110,7 +110,6 @@
 	
 	((name other) (inner
 		((name audacity)      (req x) (cmd audacity)                 (desc Record and edit audio files))
-		((name pony creator)  (req x) (cmd pony-creator)             (desc Create your own pony character inspired by My Little Pony: Friendship is Magic))
 		((name sage notebook) (req x) (cmd /opt/sage/sage -notebook) (desc SAGE notebook))
 	))
 	
