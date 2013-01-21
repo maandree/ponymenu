@@ -79,8 +79,10 @@ def flush():
 class Ponymenu:
     '''
     Ponymenu mane class
+    
+    @param  args:list<str>  Arguments to pass to the executed command
     '''
-    def __init__(self):
+    def __init__(self, args):
         '''
         Constructor and mane
         '''
@@ -177,7 +179,7 @@ class Ponymenu:
                 print('ponymenu: no menu file found')
                 return
             
-            action = self.interact()
+            action = self.interact(args)
             
         finally:
             Popen(['stty', 'icanon', 'echo', 'isig', 'ixoff', 'ixon', 'ixany'], stdin=sys.stdout).wait()
@@ -238,9 +240,11 @@ class Ponymenu:
         Popen(command, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr).wait()
     
     
-    def interact(self):
+    def interact(self, args):
         '''
         Start menu interaction
+        
+        @param  args:list<str>  Arguments to pass to the executed command
         '''
         def clean(items):
             i = 0
@@ -412,7 +416,7 @@ class Ponymenu:
                             def __init__(self, command):
                                 self.command = command
                             def __call__(self):
-                                Ponymenu.execute(self.command)
+                                Ponymenu.execute(self.command + args)
                         return ExecFunctor(item.cmd)
                 else:
                     if len(stack) == 0:
@@ -616,8 +620,12 @@ class Parser:
 
 
 if __name__ == '__main__':
+    plus = False
     for arg in sys.argv[1:]:
-        if arg in ('-h', '--help'):
+        if arg in ('-v', '--version'):
+            print('ponymenu ' + VERSION)
+            
+        elif arg in ('-h', '--help'):
             print('ponymenu – terminal based application menu')
             print()
             print('Run `info ponymenu` for usage information')
@@ -625,8 +633,9 @@ if __name__ == '__main__':
             print('-h,  --help        Print this table')
             print('-v,  --version     Print the program name and version')
             print('-c,  --copyright   Print copyright information')
-        elif arg in ('-v', '--version'):
-            print('ponymenu ' + VERSION)
+            print()
+            print()
+            
         elif arg in ('-c', '--copyright'):
             print('ponymenu – terminal based application menu')
             print()
@@ -644,7 +653,22 @@ if __name__ == '__main__':
             print()
             print('You should have received a copy of the GNU General Public License')
             print('along with this program.  If not, see <http://www.gnu.org/licenses/>.')
+            print()
+            print()
+            
+        elif arg == '+':
+            plus = True
+            break
         else:
             printerr('ponymenu: unrecognised option: ' + arg)
-    Ponymenu()
+    
+    if plus:
+        plus = 2
+        for arg in sys.argv[1:]:
+            if arg == '+':
+                break
+            plus += 1
+        Ponymenu(sys.argv[plus:])
+    else:
+        Ponymenu([])
 
