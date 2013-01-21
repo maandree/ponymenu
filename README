@@ -1,11 +1,12 @@
 ponymenu is quick terminal based application menu
 
 Why is a application menu in the terminal needed?
-    If you have many program, such as games, that
+
+    If you have many programs, such as games, that
     of which you do not known the exact name,
     using a menu is useful.
-    And becase it is runs it the terminal it is
-    also more comfortable to use the mouse eponiter
+    And because it is runs it the terminal it is
+    also more comfortable to use the mouse pointer
     based menu, it is will still work in the TTY.
 
 
