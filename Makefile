@@ -11,6 +11,8 @@ PREFIX=/usr
 BIN=/bin
 DATA=/share
 SYSCONF=/etc
+COMMAND=ponymenu
+PKGNAME=ponymenu
 
 BOOK=ponymenu
 BOOKDIR=info/
