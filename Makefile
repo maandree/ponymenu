@@ -14,7 +14,7 @@ SYSCONFDIR=/etc
 
 PROGRAM=ponymenu
 BOOK=ponymenu
-BOOKDIR=
+BOOKDIR=info/
 LANG=en_GB-ise-w_accents-only
 
 
