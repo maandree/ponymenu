@@ -8,11 +8,10 @@
 #SHELL=sh
 
 PREFIX=/usr
-BINDIR=/bin
-DATADIR=/share
-SYSCONFDIR=/etc
+BIN=/bin
+DATA=/share
+SYSCONF=/etc
 
-PROGRAM=ponymenu
 BOOK=ponymenu
 BOOKDIR=info/
 LANG=en_GB-ise-w_accents-only
@@ -70,23 +69,29 @@ grammar: ; link-parser < "$(BOOK).texinfo" 2>&1 | sed -e  \
 	   s/'No complete linkages found'/'\x1b[1;31mNo complete linkage found\x1b[m'/g | less -r
 
 
-install:
-	mkdir -p "$(DESTDIR)$(PREFIX)$(BINDIR)"
-	mkdir -p "$(DESTDIR)$(SYSCONFDIR)"
-	mkdir -p "$(DESTDIR)$(PREFIX)$(DATADIR)/info/"
-	mkdir -p "$(DESTDIR)$(PREFIX)$(DATADIR)/licenses/$(PROGRAM)"
-	install -m 755 ponymenu.py "$(DESTDIR)$(PREFIX)$(BINDIR)/$(PROGRAM)"
-	install -m 644 ponymenu.example "$(DESTDIR)$(SYSCONFDIR)/$(PROGRAM)"
-	install -m 644 ponymenu.info.gz "$(DESTDIR)$(PREFIX)$(DATADIR)/info/$(PROGRAM).info.gz"
-	install -m 644 COPYING "$(DESTDIR)$(PREFIX)$(DATADIR)/licenses/$(PROGRAM)/COPYING"
-	install -m 644 LICENSE "$(DESTDIR)$(PREFIX)$(DATADIR)/licenses/$(PROGRAM)/LICENSE"
+install: install-cmd install-license install-info
+
+install-cmd:
+	install -dm755 "$(DESTDIR)$(PREFIX)$(BIN)"
+	install -dm755 "$(DESTDIR)$(SYSCONF)"
+	install -m755 ponymenu.py "$(DESTDIR)$(PREFIX)$(BIN)/$(COMMAND)"
+	install -m 644 ponymenu.example "$(DESTDIR)$(SYSCONF)/ponymenu"
+
+install-license:
+	install -dm755 "$(DESTDIR)$(LICENSES)/$(PKGNAME)"
+	install -m644 COPYING LICENSE "$(DESTDIR)$(LICENSES)/$(PKGNAME)"
+
+install-info: $(BOOK).info.gz
+	install -dm755 "$(DESTDIR)$(PREFIX)$(DATA)/info"
+	install -m644 "$(BOOK).info.gz" "$(DESTDIR)$(PREFIX)$(DATA)/info/$(PKGNAME).info.gz"
 
 uninstall:
-	unlink "$(PREFIX)$(BINDIR)/ponymenu"
-	unlink "$(SYSCONFDIR)/ponymenu"
-	unlink "$(PREFIX)$(DATADIR)/info/$(PROGRAM).info.gz"
-	unlink "$(PREFIX)$(DATADIR)/licenses/$(PROGRAM)/COPYING"
-	unlink "$(PREFIX)$(DATADIR)/licenses/$(PROGRAM)/LICENSE"
+	-rm -- "$(DESTDIR)$(PREFIX)$(BIN)/$(COMMAND)"
+	-rm -- "$(SYSCONF)/ponymenu"
+	-rm -- "$(DESTDIR)$(LICENSES)/$(PKGNAME)/COPYING"
+	-rm -- "$(DESTDIR)$(LICENSES)/$(PKGNAME)/LICENSE"
+	-rmdir -- "$(DESTDIR)$(LICENSES)/$(PKGNAME)"
+	-rm -- "$(DESTDIR)$(PREFIX)$(DATA)/info/$(PKGNAME).info.gz"
 
 
 .PHONY: clean
