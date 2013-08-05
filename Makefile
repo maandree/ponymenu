@@ -13,6 +13,7 @@ DATA=/share
 SYSCONF=/etc
 COMMAND=ponymenu
 PKGNAME=ponymenu
+LICENSES=$(PREFIX)$(DATA)/licenses
 
 BOOK=ponymenu
 BOOKDIR=info/
